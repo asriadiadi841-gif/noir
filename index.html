@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noir Espresso - Katalog Digital</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0a0a">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0a0a0a;
+            color: #e5e7eb;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #00ffb4, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #00ffb4, #00d4ff);
+            color: #000;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 20px rgba(0, 255, 180, 0.4);
+            transform: scale(1.02);
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff3e3e;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 10px;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-btn.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(0, 255, 180, 0.5);
+        }
+
+        .product-card.hidden-item {
+            display: none;
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .qty-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+
+        .qty-btn-minus {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .qty-btn-plus {
+            background: rgba(0, 255, 180, 0.1);
+            color: #00ffb4;
+        }
+
+        .qty-number {
+            font-weight: 700;
+            min-width: 24px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        #orderModal {
+            display: none;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body>
+
+    <header class="relative h-[45vh] flex items-center justify-center text-center px-6 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent to-[#0a0a0a] z-10"></div>
+        <div class="absolute inset-0 opacity-50">
+            <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200" alt="Kedai Kopi" class="w-full h-full object-cover">
+        </div>
+        
+        <div class="relative z-20 animate-fade-in">
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-2 uppercase text-white">Noir <span class="gradient-text">Espresso</span></h1>
+            <p class="text-gray-400 text-sm md:text-lg tracking-widest uppercase italic">The Art of Pure Caffeine</p>
+        </div>
+    </header>
+
+    <nav class="sticky top-0 z-30 glass-card py-4 px-6 mb-8 flex gap-4 overflow-x-auto no-scrollbar border-b border-white/5 bg-black/80">
+        <button onclick="filterCategory('all')" class="category-btn active whitespace-nowrap px-8 py-2 rounded-full text-sm font-semibold transition-all">Semua</button>
+        <button onclick="filterCategory('coffee')" class="category-btn whitespace-nowrap px-8 py-2 rounded-full text-sm font-semibold text-gray-400 hover:text-white transition-all">Coffee</button>
+        <button onclick="filterCategory('non-coffee')" class="category-btn whitespace-nowrap px-8 py-2 rounded-full text-sm font-semibold text-gray-400 hover:text-white transition-all">Non-Coffee</button>
+        <button onclick="filterCategory('pastry')" class="category-btn whitespace-nowrap px-8 py-2 rounded-full text-sm font-semibold text-gray-400 hover:text-white transition-all">Pastry</button>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-6 pb-48">
+        <div id="productGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            <div class="product-card glass-card rounded-3xl overflow-hidden animate-fade-in" data-category="coffee">
+                <img src="https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=600" alt="Midnight Latte" class="w-full h-56 object-cover">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="text-xl font-bold">Midnight Latte</h3>
+                        <span class="text-emerald-400 font-bold">Rp 28.000</span>
+                    </div>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-6">Espresso premium dengan susu silky dan charcoal infused vanilla.</p>
+                    <div class="flex items-center justify-between">
+                        <div id="ctrl-MidnightLatte" class="hidden quantity-control w-full justify-between">
+                            <button onclick="removeFromCart('Midnight Latte', 28000)" class="qty-btn qty-btn-minus"><i class="fas fa-minus"></i></button>
+                            <span id="qty-MidnightLatte" class="qty-number">0</span>
+                            <button onclick="addToCart('Midnight Latte', 28000)" class="qty-btn qty-btn-plus"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <button id="btn-add-MidnightLatte" onclick="addToCart('Midnight Latte', 28000)" class="w-full py-3.5 rounded-2xl border border-white/10 hover:bg-white/5 font-semibold transition-all">
+                            + Tambah Pesanan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-card glass-card rounded-3xl overflow-hidden animate-fade-in" data-category="coffee">
+                <img src="https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=600" alt="Cold Brew" class="w-full h-56 object-cover">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="text-xl font-bold">Cold Brew Noir</h3>
+                        <span class="text-emerald-400 font-bold">Rp 32.000</span>
+                    </div>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-6">18 jam cold extraction menghasilkan rasa cokelat murni tanpa gula.</p>
+                    <div class="flex items-center justify-between">
+                        <div id="ctrl-ColdBrewNoir" class="hidden quantity-control w-full justify-between">
+                            <button onclick="removeFromCart('Cold Brew Noir', 32000)" class="qty-btn qty-btn-minus"><i class="fas fa-minus"></i></button>
+                            <span id="qty-ColdBrewNoir" class="qty-number">0</span>
+                            <button onclick="addToCart('Cold Brew Noir', 32000)" class="qty-btn qty-btn-plus"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <button id="btn-add-ColdBrewNoir" onclick="addToCart('Cold Brew Noir', 32000)" class="w-full py-3.5 rounded-2xl border border-white/10 hover:bg-white/5 font-semibold transition-all">
+                            + Tambah Pesanan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-card glass-card rounded-3xl overflow-hidden animate-fade-in" data-category="non-coffee">
+                <img src="https://images.unsplash.com/photo-1515823662273-0b5071583fc4?auto=format&fit=crop&w=600" alt="Matcha" class="w-full h-56 object-cover">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="text-xl font-bold">Emerald Matcha</h3>
+                        <span class="text-emerald-400 font-bold">Rp 30.000</span>
+                    </div>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-6">Uji Matcha grade tertinggi dengan sensasi umami yang kuat.</p>
+                    <div class="flex items-center justify-between">
+                        <div id="ctrl-EmeraldMatcha" class="hidden quantity-control w-full justify-between">
+                            <button onclick="removeFromCart('Emerald Matcha', 30000)" class="qty-btn qty-btn-minus"><i class="fas fa-minus"></i></button>
+                            <span id="qty-EmeraldMatcha" class="qty-number">0</span>
+                            <button onclick="addToCart('Emerald Matcha', 30000)" class="qty-btn qty-btn-plus"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <button id="btn-add-EmeraldMatcha" onclick="addToCart('Emerald Matcha', 30000)" class="w-full py-3.5 rounded-2xl border border-white/10 hover:bg-white/5 font-semibold transition-all">
+                            + Tambah Pesanan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-card glass-card rounded-3xl overflow-hidden animate-fade-in" data-category="pastry">
+                <img src="https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=600" alt="Croissant" class="w-full h-56 object-cover">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="text-xl font-bold">Butter Croissant</h3>
+                        <span class="text-emerald-400 font-bold">Rp 22.000</span>
+                    </div>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-6">Flaky, buttery, dan renyah. Sempurna untuk pendamping kopi.</p>
+                    <div class="flex items-center justify-between">
+                        <div id="ctrl-ButterCroissant" class="hidden quantity-control w-full justify-between">
+                            <button onclick="removeFromCart('Butter Croissant', 22000)" class="qty-btn qty-btn-minus"><i class="fas fa-minus"></i></button>
+                            <span id="qty-ButterCroissant" class="qty-number">0</span>
+                            <button onclick="addToCart('Butter Croissant', 22000)" class="qty-btn qty-btn-plus"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <button id="btn-add-ButterCroissant" onclick="addToCart('Butter Croissant', 22000)" class="w-full py-3.5 rounded-2xl border border-white/10 hover:bg-white/5 font-semibold transition-all">
+                            + Tambah Pesanan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="cartBar" class="fixed bottom-0 left-0 right-0 p-6 z-40 transform translate-y-full transition-transform duration-500">
+        <div class="max-w-3xl mx-auto glass-card rounded-3xl p-5 flex items-center justify-between shadow-2xl border-t border-white/20 bg-black/90">
+            <div class="flex items-center gap-5">
+                <div class="relative bg-emerald-500/20 p-4 rounded-2xl">
+                    <i class="fas fa-shopping-bag text-emerald-400 text-xl"></i>
+                    <span id="cartCount" class="cart-badge">0</span>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase font-bold tracking-widest">Total Harga</p>
+                    <p id="totalPrice" class="font-extrabold text-2xl text-white">Rp 0</p>
+                </div>
+            </div>
+            <button onclick="openOrderModal()" class="btn-primary px-10 py-4 rounded-2xl flex items-center gap-3 text-lg">
+                Pesan <i class="fab fa-whatsapp"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="orderModal" class="fixed inset-0 z-50 hidden items-center justify-center p-6">
+        <div class="glass-card bg-[#0d0d0d] w-full max-w-md rounded-[2.5rem] p-10 border border-white/10 shadow-3xl animate-fade-in">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold gradient-text">Checkout</h2>
+                <button onclick="closeOrderModal()" class="text-gray-500 hover:text-white transition-colors"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-[10px] uppercase tracking-[0.2em] text-gray-500 mb-2 font-bold">Nama Lengkap</label>
+                    <input type="text" id="custName" class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500/50 text-white transition-all" placeholder="Alex Noir">
+                </div>
+                <div>
+                    <label class="block text-[10px] uppercase tracking-[0.2em] text-gray-500 mb-2 font-bold">Alamat Pengiriman</label>
+                    <textarea id="custAddress" rows="3" class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-emerald-500/50 text-white transition-all" placeholder="Tulis alamat lengkap pengiriman..."></textarea>
+                </div>
+            </div>
+
+            <button onclick="processCheckout()" class="btn-primary w-full mt-10 py-5 rounded-[1.5rem] flex items-center justify-center gap-3 text-lg">
+                Konfirmasi via WhatsApp <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let cart = [];
+        let total = 0;
+        let itemCounts = {};
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW Registered!'))
+                    .catch(err => console.log('SW Failed', err));
+            });
+        }
+
+        function filterCategory(category) {
+            const cards = document.querySelectorAll('.product-card');
+            const btns = document.querySelectorAll('.category-btn');
+            
+            btns.forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('text-gray-400');
+            });
+            
+            const activeBtn = Array.from(btns).find(btn => 
+                btn.innerText.toLowerCase() === category.toLowerCase() || 
+                (category === 'all' && btn.innerText.toLowerCase() === 'semua')
+            );
+
+            if(activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.classList.remove('text-gray-400');
+            }
+
+            cards.forEach(card => {
+                if (category === 'all' || card.getAttribute('data-category') === category) {
+                    card.classList.remove('hidden-item');
+                } else {
+                    card.classList.add('hidden-item');
+                }
+            });
+        }
+
+        function addToCart(name, price) {
+            cart.push({ name, price });
+            itemCounts[name] = (itemCounts[name] || 0) + 1;
+            updateCartUI();
+            updateItemControls(name);
+            document.getElementById('cartBar').classList.remove('translate-y-full');
+        }
+
+        function removeFromCart(name, price) {
+            const index = cart.findIndex(item => item.name === name);
+            if (index > -1) {
+                cart.splice(index, 1);
+                itemCounts[name]--;
+                updateCartUI();
+                updateItemControls(name);
+                if (cart.length === 0) document.getElementById('cartBar').classList.add('translate-y-full');
+            }
+        }
+
+        function updateItemControls(name) {
+            const id = name.replace(/\s+/g, '');
+            const ctrl = document.getElementById(`ctrl-${id}`);
+            const btnAdd = document.getElementById(`btn-add-${id}`);
+            const qtyText = document.getElementById(`qty-${id}`);
+            const count = itemCounts[name] || 0;
+
+            if (count > 0) {
+                if(btnAdd) btnAdd.classList.add('hidden');
+                if(ctrl) {
+                    ctrl.classList.remove('hidden');
+                    ctrl.classList.add('flex');
+                }
+                if(qtyText) qtyText.innerText = count;
+            } else {
+                if(btnAdd) btnAdd.classList.remove('hidden');
+                if(ctrl) {
+                    ctrl.classList.add('hidden');
+                    ctrl.classList.remove('flex');
+                }
+            }
+        }
+
+        function updateCartUI() {
+            total = cart.reduce((sum, item) => sum + item.price, 0);
+            document.getElementById('cartCount').innerText = cart.length;
+            document.getElementById('totalPrice').innerText = `Rp ${total.toLocaleString('id-ID')}`;
+        }
+
+        function openOrderModal() {
+            document.getElementById('orderModal').style.display = 'flex';
+        }
+
+        function closeOrderModal() {
+            document.getElementById('orderModal').style.display = 'none';
+        }
+
+        function processCheckout() {
+            const name = document.getElementById('custName').value;
+            const address = document.getElementById('custAddress').value;
+
+            if (!name || !address) {
+                alert('Tolong isi Nama dan Alamat lengkap ya!');
+                return;
+            }
+
+            const phoneNumber = "628518095271"; 
+            let orderDetails = "";
+            let itemSummary = {};
+
+            cart.forEach(item => {
+                if (!itemSummary[item.name]) itemSummary[item.name] = { qty: 0, price: item.price };
+                itemSummary[item.name].qty++;
+            });
+
+            for (const [itemName, data] of Object.entries(itemSummary)) {
+                const sub = data.qty * data.price;
+                orderDetails += `• *${itemName}*\n   ${data.qty} x Rp ${data.price.toLocaleString('id-ID')} = *Rp ${sub.toLocaleString('id-ID')}*\n`;
+            }
+
+            const message = `*PESANAN BARU - NOIR ESPRESSO*\n` +
+                          `──────────────────\n` +
+                          `*Pelanggan:*\n` +
+                          `👤 Nama: ${name}\n` +
+                          `📍 Alamat: ${address}\n\n` +
+                          `*Detail Menu:*\n${orderDetails}\n` +
+                          `*TOTAL TAGIHAN: Rp ${total.toLocaleString('id-ID')}*\n` +
+                          `──────────────────\n` +
+                          `_Mohon segera diproses ya, terima kasih!_`;
+
+            window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, '_blank');
+            closeOrderModal();
+        }
+    </script>
+</body>
+</html>
