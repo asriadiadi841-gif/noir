@@ -1,4 +1,4 @@
-const CACHE_NAME = 'noir-espresso-v1';
+const CACHE_NAME = 'noir-espresso-v2';
 const assets = [
   './',
   './index.html',
